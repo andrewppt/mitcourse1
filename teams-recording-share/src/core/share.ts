@@ -355,6 +355,7 @@ export async function shareRecordingWithAttendees(
           const a = byEmail.get(email);
           out.granted.push(a ? person(a) : { email, source: "extra" });
         }
+        if (out.fallbackLink) out.fallbackLink.sentTo = [...failedEmails];
       } catch (e) {
         log.error("could not grant the sharing link", { itemId: item.id, error: errMessage(e) });
         out.errors.push({ message: `Could not grant the sharing link: ${errMessage(e)}` });
