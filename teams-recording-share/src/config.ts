@@ -11,6 +11,7 @@ import fs from "node:fs";
 import path from "node:path";
 
 export type AuthMode = "app" | "delegated";
+export type LoginFlow = "browser" | "device-code";
 export type ExternalFallback = "users-link" | "anonymous-link" | "skip";
 
 export interface AppConfig {
@@ -20,6 +21,10 @@ export interface AppConfig {
   authMode: AuthMode;
   /** Where the delegated (device-code) MSAL token cache is persisted. */
   tokenCachePath: string;
+  /** Interactive sign-in flow for delegated mode: "browser" (auth code + PKCE on http://localhost, default) or "device-code". */
+  loginFlow: LoginFlow;
+  /** Fixed localhost port for the browser sign-in redirect (0 = pick a free port; Entra accepts any port for http://localhost). */
+  loginRedirectPort: number;
   /** Delegated scopes requested at sign-in. */
   delegatedScopes: string[];
   /** Organizer user object IDs (or UPNs) whose meetings the webhook service watches. Empty = tenant-wide subscription. */
@@ -95,6 +100,8 @@ export function loadConfig(env: NodeJS.ProcessEnv = process.env): AppConfig {
     clientSecret: env.CLIENT_SECRET || undefined,
     authMode,
     tokenCachePath: env.TOKEN_CACHE_PATH || path.resolve(env.STATE_DIR || "./data", "msal-cache.json"),
+    loginFlow: ((env.LOGIN_FLOW ?? "browser").toLowerCase() as LoginFlow),
+    loginRedirectPort: int(env.LOGIN_REDIRECT_PORT, 0),
     delegatedScopes: list(env.DELEGATED_SCOPES).length
       ? list(env.DELEGATED_SCOPES)
       : ["OnlineMeetings.Read", "OnlineMeetingRecording.Read.All", "OnlineMeetingArtifact.Read.All", "Files.ReadWrite", "Calendars.Read", "Mail.Send", "User.Read", "offline_access"],
@@ -115,6 +122,7 @@ export function loadConfig(env: NodeJS.ProcessEnv = process.env): AppConfig {
     stateDir: env.STATE_DIR || "./data",
     graphBaseUrl: env.GRAPH_BASE_URL || "https://graph.microsoft.com",
   };
+  if (cfg.loginFlow !== "browser" && cfg.loginFlow !== "device-code") throw new Error(`LOGIN_FLOW must be "browser" or "device-code", got "${env.LOGIN_FLOW}"`);
   if (cfg.authMode === "app" && !cfg.clientSecret) throw new Error("AUTH_MODE=app requires CLIENT_SECRET");
   if (!["users-link", "anonymous-link", "skip"].includes(cfg.externalFallback)) throw new Error(`EXTERNAL_FALLBACK must be users-link | anonymous-link | skip`);
   return cfg;

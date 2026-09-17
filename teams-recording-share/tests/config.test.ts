@@ -32,6 +32,8 @@ test("loadConfig applies documented defaults in delegated mode", () => {
   assert.deepEqual(cfg.internalDomains, []);
   assert.equal(cfg.tokenCachePath, path.resolve("./data", "msal-cache.json"));
   assert.ok(cfg.delegatedScopes.includes("offline_access"));
+  assert.equal(cfg.loginFlow, "browser");
+  assert.equal(cfg.loginRedirectPort, 0);
   assert.ok(cfg.delegatedScopes.includes("OnlineMeetingRecording.Read.All"));
 });
 
@@ -109,4 +111,10 @@ test("EXTERNAL_FALLBACK is validated", () => {
   assert.equal(loadConfig({ ...MINIMAL, EXTERNAL_FALLBACK: "skip" }).externalFallback, "skip");
   assert.equal(loadConfig({ ...MINIMAL, EXTERNAL_FALLBACK: "anonymous-link" }).externalFallback, "anonymous-link");
   assert.throws(() => loadConfig({ ...MINIMAL, EXTERNAL_FALLBACK: "carrier-pigeon" }), /EXTERNAL_FALLBACK/);
+});
+
+test("LOGIN_FLOW is validated and LOGIN_REDIRECT_PORT parsed", () => {
+  assert.equal(loadConfig({ ...MINIMAL, LOGIN_FLOW: "Device-Code" }).loginFlow, "device-code");
+  assert.equal(loadConfig({ ...MINIMAL, LOGIN_REDIRECT_PORT: "8400" }).loginRedirectPort, 8400);
+  assert.throws(() => loadConfig({ ...MINIMAL, LOGIN_FLOW: "popup" }), /LOGIN_FLOW/);
 });

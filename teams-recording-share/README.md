@@ -25,7 +25,7 @@ Two ways to run it:
 - **Automatic**: a small webhook service subscribed to Graph's "recording available" notifications.
   Every recording gets shared minutes after the meeting ends, with no one in the loop.
 - **Manual / ad hoc**: an MCP server (use it from Claude Desktop or Claude Code) and a CLI, both
-  running as you via device-code sign-in. Useful for one-off meetings, for backfilling, and when
+  running as you via a browser sign-in. Useful for one-off meetings, for backfilling, and when
   app-only auth cannot invite a guest.
 
 Setup — app registration, permissions, the Teams application access policy, external sharing
@@ -72,7 +72,7 @@ settings — is in **[docs/SETUP.md](docs/SETUP.md)**.
 ```
 
 Auth is one of two modes (`AUTH_MODE`): `app` (client credentials, for the unattended service) or
-`delegated` (device code as a signed-in person, for the CLI and MCP server). The pipeline itself is
+`delegated` (a browser sign-in as a person, for the CLI and MCP server). The pipeline itself is
 identical in both.
 
 ## Quick start
@@ -84,7 +84,7 @@ Requires Node 22 (Node 20 works too) and an Entra app registration — see
 npm install
 cp .env.example .env      # fill in TENANT_ID and CLIENT_ID (AUTH_MODE=delegated to start)
 
-npm run login             # device-code sign-in; prints a code to enter at microsoft.com/devicelogin
+npm run login             # opens a browser window to sign in; the token cache is written to ./data
 npx tsx src/cli.ts whoami # confirms who you are signed in as
 
 # share the recording of one meeting, dry run first
@@ -99,7 +99,7 @@ Other CLI commands (all accept `--json`):
 
 | Command | What it does |
 | --- | --- |
-| `npx tsx src/cli.ts login` | Device-code sign-in; writes the token cache. |
+| `npx tsx src/cli.ts login` | Browser sign-in (auth code + PKCE on `http://localhost`); writes the token cache. Set `LOGIN_FLOW=device-code` only if your tenant allows that flow. |
 | `npx tsx src/cli.ts whoami` | Auth mode and signed-in account. |
 | `npx tsx src/cli.ts share --meeting <id>\|--join-url <url> [--organizer <id>] [--recording <id>] [--drive-item <id>] [--extra a@b.com,c@d.com] [--dry-run]` | Run the share pipeline. |
 | `npx tsx src/cli.ts attendees --meeting <id>\|--join-url <url> [--calendar]` | Who attended, marked internal/external. |

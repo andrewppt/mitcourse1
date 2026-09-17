@@ -110,7 +110,7 @@ function createCtx(): Ctx {
   const cfg = loadConfig();
   const tokens = tokenProviderFromConfig(cfg, {
     allowInteractive: false,
-    onDeviceCode: (message: string) => out(message),
+    onMessage: (message: string) => out(message),
   });
   return { cfg, tokens, graph: new GraphClient(tokens, { baseUrl: cfg.graphBaseUrl, logger: log }) };
 }
@@ -219,7 +219,7 @@ Usage:
   tsx src/cli.ts <command> [options]
 
 Commands:
-  login                         Sign in with the device-code flow and persist the token cache
+  login                         Sign in (browser window by default) and persist the token cache
   whoami                        Show the auth mode and the signed-in account
   share                         Grant attendees read access to a meeting's recording
   attendees                     List the people who attended a meeting

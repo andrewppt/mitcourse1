@@ -59,7 +59,7 @@ function getCtx(): Ctx {
   }
   const tokens = tokenProviderFromConfig(cfg, {
     allowInteractive: false,
-    onDeviceCode: (message: string) => log.info("device code", { message }),
+    onMessage: (message: string) => log.info("sign-in", { message }),
   });
   const graph = new GraphClient(tokens, { baseUrl: cfg.graphBaseUrl, logger: log });
   ctx = { cfg, tokens, graph };

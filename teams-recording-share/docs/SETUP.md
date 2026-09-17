@@ -6,7 +6,7 @@ a Teams Administrator and a SharePoint Administrator).
 
 Two decisions up front:
 
-- **Auth mode.** `delegated` (device-code sign-in as a person; the CLI and MCP server) or `app`
+- **Auth mode.** `delegated` (browser sign-in as a person; the CLI and MCP server) or `app`
   (client credentials, no user; the webhook service). You can register one app that does both.
 - **Scope.** The webhook service can watch the whole tenant (one subscription on
   `communications/onlineMeetings/getAllRecordings`) or only named organizers
@@ -21,13 +21,17 @@ Entra admin center → **Identity** → **Applications** → **App registrations
 | --- | --- |
 | Name | `teams-recording-share` |
 | Supported account types | **Accounts in this organizational directory only** (single tenant) |
-| Redirect URI | leave empty |
+| Redirect URI | platform **Mobile and desktop applications**, URI `http://localhost` |
 
 Then, in the new registration:
 
-- **Authentication** → **Advanced settings** → **Allow public client flows** → **Yes**.
-  This is what enables the device-code flow used by `npm run login`. No redirect URI is required for
-  device code.
+- **Authentication** → confirm `http://localhost` is listed under **Mobile and desktop applications**.
+  `npm run login` runs the authorization-code flow with PKCE: it starts a listener on a random
+  loopback port, opens the browser, and receives the code on `http://localhost:<port>`. Entra accepts
+  any port for a registered `http://localhost` redirect, so no port needs to be fixed (set
+  `LOGIN_REDIRECT_PORT` if your policy requires one, and register that exact URI).
+  **Allow public client flows** can stay **No**; it is only needed for `LOGIN_FLOW=device-code`,
+  which many tenants disable.
 - **Overview** → copy **Application (client) ID** → `CLIENT_ID`, and **Directory (tenant) ID** →
   `TENANT_ID`.
 - Only if you will run `AUTH_MODE=app`: **Certificates & secrets** → **New client secret** → copy the
@@ -151,7 +155,7 @@ Then sign in (delegated mode only) and check the setup:
 
 ```bash
 npm install
-npm run login                 # device code; sign in as an organizer
+npm run login                 # opens a browser; sign in as an organizer
 npx tsx src/cli.ts whoami
 npx tsx src/cli.ts recordings # should list your recent recording files
 ```
@@ -231,4 +235,7 @@ Facts worth knowing:
 | Subscription creation fails with "endpoint not valid" | The validation handshake did not return the token in plain text within 10s: service not running, wrong path, HTTP instead of HTTPS, or a proxy rewriting the response. |
 | `Missing required environment variable ...` | `.env` not loaded — run from the project directory, or set the variables in the MCP client's `env` block. |
 | `AUTH_MODE=app requires CLIENT_SECRET` | Set `CLIENT_SECRET`, or switch to `AUTH_MODE=delegated`. |
-| Device-code login keeps being asked for | The token cache is not persisting: check `TOKEN_CACHE_PATH`/`STATE_DIR` is writable, and that `offline_access` is in the delegated scopes. |
+| `AADSTS50011` redirect URI mismatch at sign-in | Add `http://localhost` under **Mobile and desktop applications** on the app registration (not Web, not SPA). |
+| `AADSTS7000218` / `AADSTS70002` client secret expected at sign-in | The redirect URI was registered as a **Web** platform; move it to **Mobile and desktop applications**. |
+| Browser sign-in on a headless machine | Run `npm run login` on a machine with a browser and copy the `msal-cache.json` file over, or use `AUTH_MODE=app`. |
+| Login keeps being asked for | The token cache is not persisting: check `TOKEN_CACHE_PATH`/`STATE_DIR` is writable, and that `offline_access` is in the delegated scopes. |
