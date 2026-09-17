@@ -1,0 +1,31 @@
+{
+  "name": "teams-recording-share",
+  "version": "0.1.0",
+  "description": "When a Teams meeting recording lands in the organizer's OneDrive, grant read access to everyone who attended (guests included). Ships as an MCP server plus a Graph webhook service.",
+  "type": "module",
+  "private": true,
+  "engines": { "node": ">=20" },
+  "bin": { "teams-recording-share-mcp": "dist/mcp/server.js" },
+  "scripts": {
+    "build": "tsc -p tsconfig.json",
+    "typecheck": "tsc -p tsconfig.json --noEmit",
+    "test": "node --test --import tsx tests/*.test.ts",
+    "mcp": "tsx src/mcp/server.ts",
+    "service": "tsx src/service/server.ts",
+    "subscribe": "tsx src/service/subscribe.ts",
+    "login": "tsx src/cli.ts login",
+    "share": "tsx src/cli.ts share"
+  },
+  "dependencies": {
+    "@azure/msal-node": "^3.5.0",
+    "@modelcontextprotocol/sdk": "^1.30.0",
+    "express": "^5.2.1",
+    "zod": "^3.25.76"
+  },
+  "devDependencies": {
+    "@types/express": "^5.0.6",
+    "@types/node": "^22.20.3",
+    "tsx": "^4.20.3",
+    "typescript": "^5.8.3"
+  }
+}
